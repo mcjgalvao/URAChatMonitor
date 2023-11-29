@@ -1,4 +1,4 @@
-PUT  http://127.0.0.1:8001/log_derivation HTTP/1.1
+PUT  http://127.0.0.1:8001/log_start HTTP/1.1
 content-type: application/json
 
 {
@@ -6,9 +6,9 @@ content-type: application/json
     "flow": "retention",
     "brand": "VIP",
     "node": "1.2.3.1.3",
-    "derived-to" : "SAC",
     "time": "Wed, 21 Oct 2015 18:27:50 GMT"
 }
+
 
 
 

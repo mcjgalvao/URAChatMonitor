@@ -26,14 +26,141 @@ loki_log.addHandler(handler)
 app = Flask(__name__)
 
 # Create Metrics
-c_derivation_total = Counter('log_derivation_total', 'Total number of requests for the log_derivation service', ['consumer','node','derived_to'])
-c_service_call_total = Counter('log_service_call_total', 'Total number of requests for the log_service_call service', ['consumer','node','service','result_code','timeout'])
-h_service_call_duration = Histogram('log_service_call_duration', 'Perceived service time from consumers perspective', ['consumer','node','service','result_code','timeout'])
+c_start_total = Counter('log_start_total', 'Total number of requests for the log_start service', ['consumer','flow','brand','node'])
+
+c_end_total = Counter('log_end_total', 'Total number of requests for the log_end service', ['consumer','flow','brand','node',"close_status"]) # Only END without derivation
+c_derivation_total = Counter('log_derivation_total', 'Total number of requests for the log_derivation service', ['consumer','flow','brand','node','derived_to'])
+
+c_service_call_total = Counter('log_service_call_total', 'Total number of requests for the log_service_call service', ['consumer','flow','brand','node','service','result_code','timeout'])
+h_service_call_duration = Histogram('log_service_call_duration', 'Perceived service time from consumers perspective', ['consumer','flow','brand','node','service','result_code','timeout'])
 
 # Add prometheus wsgi middleware to route /metrics requests
 app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
     '/metrics': make_wsgi_app()
 })
+
+@app.route('/log_start', methods=['POST','GET','PUT'])
+def register_start():
+   global c_start_total
+
+   record = json.loads(request.data)
+   log.debug("DATA IN: " + str(record))
+
+   try:
+      consumer = record['consumer']
+      log.debug("consumer: " + consumer)
+   except KeyError:
+      log.error("Missing 'consumer' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'consumer\' field'})
+
+   try:
+      flow = record['flow']
+      log.debug("flow: " + flow)
+   except KeyError:
+      log.error("Missing 'flow' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'flow\' field'})
+
+   try:
+      brand = record['brand']
+      log.debug("brand: " + brand)
+   except KeyError:
+      log.error("Missing 'brand' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'brand\' field'})
+
+   try:
+      node = record['node']
+      log.debug("node: " + node)
+   except KeyError:
+      log.error("Missing 'node' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'node\' field'})
+
+   try:
+      time = record['time']
+      log.debug("time: " + time)
+   except KeyError:
+      log.error("Missing 'time' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'time\' field'})
+
+   # Process prometheus metrics
+   c_start_total.labels(consumer=consumer,flow=flow,brand=brand,node=node).inc()
+
+   # Generate log line that will be parsed by Loki
+   loki_log.info("log_start: " + consumer + " " + flow + " " + brand + " " + node + " " + time)
+   timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f%Z")
+
+   return jsonify({'result': 'ok',
+                       'timestamp': timestamp})
+
+@app.route('/log_end', methods=['POST','GET','PUT'])
+def register_end():
+   global c_end_total
+
+   record = json.loads(request.data)
+   log.debug("DATA IN: " + str(record))
+
+   try:
+      consumer = record['consumer']
+      log.debug("consumer: " + consumer)
+   except KeyError:
+      log.error("Missing 'consumer' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'consumer\' field'})
+
+   try:
+      flow = record['flow']
+      log.debug("flow: " + flow)
+   except KeyError:
+      log.error("Missing 'flow' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'flow\' field'})
+
+   try:
+      brand = record['brand']
+      log.debug("brand: " + brand)
+   except KeyError:
+      log.error("Missing 'brand' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'brand\' field'})
+
+   try:
+      node = record['node']
+      log.debug("node: " + node)
+   except KeyError:
+      log.error("Missing 'node' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'node\' field'})
+
+   try:
+      close_status = record['close-status']
+      log.debug("close-status: " + close_status)
+   except KeyError:
+      log.error("Missing 'close-status' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'close-status\' field'})
+
+   try:
+      time = record['time']
+      log.debug("time: " + time)
+   except KeyError:
+      log.error("Missing 'time' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'time\' field'})
+
+   # Process prometheus metrics
+   c_end_total.labels(consumer=consumer,flow=flow,brand=brand,node=node,close_status=close_status).inc()
+
+   # Generate log line that will be parsed by Loki
+   loki_log.info("log_end: " + consumer + " " + flow + " " + brand + " " + node + " " + close_status + " " + time)
+   timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f%Z")
+
+   return jsonify({'result': 'ok',
+                       'timestamp': timestamp})
+
 
 @app.route('/log_derivation', methods=['POST','GET','PUT'])
 def register_derivation():
@@ -49,6 +176,22 @@ def register_derivation():
       log.error("Missing 'consumer' field")
       return jsonify({'result': 'error',
                        'description': 'Missing \'consumer\' field'})
+
+   try:
+      flow = record['flow']
+      log.debug("flow: " + flow)
+   except KeyError:
+      log.error("Missing 'flow' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'flow\' field'})
+
+   try:
+      brand = record['brand']
+      log.debug("brand: " + brand)
+   except KeyError:
+      log.error("Missing 'brand' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'brand\' field'})
 
    try:
       node = record['node']
@@ -75,10 +218,10 @@ def register_derivation():
                        'description': 'Missing \'time\' field'})
 
    # Process prometheus metrics
-   c_derivation_total.labels(consumer=consumer,node=node,derived_to=derived_to).inc()
+   c_derivation_total.labels(consumer=consumer,flow=flow,brand=brand,node=node,derived_to=derived_to).inc()
 
    # Generate log line that will be parsed by Loki
-   loki_log.info("log_derivation: " + consumer + " " + node + " " + derived_to + " " + time)
+   loki_log.info("log_derivation: " + consumer + " " + flow + " " + brand + " " + node + " " + derived_to + " " + time)
    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f%Z")
 
    return jsonify({'result': 'ok',
@@ -86,6 +229,9 @@ def register_derivation():
 
 @app.route('/log_service_call', methods=['POST','GET','PUT'])
 def register_service_call():
+   global c_service_call_total
+   global h_service_call_duration
+
    record = json.loads(request.data)
    log.debug("DATA IN: " + str(record))
 
@@ -96,6 +242,22 @@ def register_service_call():
       log.error("Missing 'consumer' field")
       return jsonify({'result': 'error',
                        'description': 'Missing \'consumer\' field'})
+
+   try:
+      flow = record['flow']
+      log.debug("flow: " + flow)
+   except KeyError:
+      log.error("Missing 'flow' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'flow\' field'})
+
+   try:
+      brand = record['brand']
+      log.debug("brand: " + brand)
+   except KeyError:
+      log.error("Missing 'brand' field")
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'brand\' field'})
 
    try:
       node = record['node']
@@ -151,11 +313,11 @@ def register_service_call():
                        'description': 'Missing \'time\' field'})
 
    # Process prometheus metrics
-   c_service_call_total.labels(consumer=consumer,node=node,service=service,result_code=result_code,timeout=timeout).inc()
-   h_service_call_duration.labels(consumer=consumer,node=node,service=service,result_code=result_code,timeout=timeout).observe(f_duration)
+   c_service_call_total.labels(consumer=consumer,flow=flow,brand=brand,node=node,service=service,result_code=result_code,timeout=timeout).inc()
+   h_service_call_duration.labels(consumer=consumer,flow=flow,brand=brand,node=node,service=service,result_code=result_code,timeout=timeout).observe(f_duration)
 
    # Generate log line that will be parsed by Loki
-   loki_log.info("log_service_call: " + consumer + " " + node + " " + service + " " + result_code 
+   loki_log.info("log_service_call: " + consumer + " " + flow + " " + brand + " " + node + " " + service + " " + result_code 
       + " " + duration + " " + timeout + " " + time)
    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f%Z")
 
