@@ -1,2 +1,4 @@
 /monitor-env
 __pycache__
+monitor_log.txt
+test_log.txt
