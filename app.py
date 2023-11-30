@@ -3,6 +3,7 @@ import json
 import logging as log
 import datetime
 import sys
+import time as ptime
 
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from prometheus_client import make_wsgi_app, Counter, Histogram
@@ -40,8 +41,19 @@ c_service_call_total = Counter('log_service_call_total', 'Total number of reques
 h_service_call_duration = Histogram('log_service_call_duration', 'Perceived service time from consumers perspective'
                                , ['consumer','flow','brand','node','service','result_code','timeout'])
 
+# internal metrics
+c_internal_success = Counter('log_internal_success', 'Total number of successful requests'
+                               , ['service'])
+c_internal_error = Counter('log_internal_error', 'Total number of failed requests'
+                               , ['service'])
+h_internal_duration = Histogram('log_internal_duration', 'Internal service processing time'
+                               , ['service'])
+
 # CONSTANTS
 CLOSE_DERIVED = "derived"
+LOG_START_SERVICE = "log_start"
+LOG_END_SERVICE = "log_end"
+LOG_SERVICE_CALL_SERVICE = "log_service_call"
 
 # Add prometheus wsgi middleware to route /metrics requests
 app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
@@ -51,6 +63,12 @@ app.wsgi_app = DispatcherMiddleware(app.wsgi_app, {
 @app.route('/log_start', methods=['POST','GET','PUT'])
 def register_start():
    global c_start_total
+   global c_internal_success
+   global c_internal_error
+   global h_internal_duration
+   global LOG_START_SERVICE
+
+   start_time = ptime.time()
 
    record = json.loads(request.data)
    log.debug("DATA IN: " + str(record))
@@ -60,6 +78,7 @@ def register_start():
       log.debug("consumer: " + consumer)
    except KeyError:
       log.error("Missing 'consumer' field")
+      c_internal_error.labels(service=LOG_START_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'consumer\' field'})
 
@@ -68,6 +87,7 @@ def register_start():
       log.debug("flow: " + flow)
    except KeyError:
       log.error("Missing 'flow' field")
+      c_internal_error.labels(service=LOG_START_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'flow\' field'})
 
@@ -76,6 +96,7 @@ def register_start():
       log.debug("brand: " + brand)
    except KeyError:
       log.error("Missing 'brand' field")
+      c_internal_error.labels(service=LOG_START_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'brand\' field'})
 
@@ -84,6 +105,7 @@ def register_start():
       log.debug("node: " + node)
    except KeyError:
       log.error("Missing 'node' field")
+      c_internal_error.labels(service=LOG_START_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'node\' field'})
 
@@ -92,16 +114,20 @@ def register_start():
       log.debug("time: " + time)
    except KeyError:
       log.error("Missing 'time' field")
+      c_internal_error.labels(service=LOG_START_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'time\' field'})
 
    # Process prometheus metrics
    c_start_total.labels(consumer=consumer,flow=flow,brand=brand,node=node).inc()
+   c_internal_success.labels(service=LOG_START_SERVICE).inc()
 
    # Generate log line that will be parsed by Loki
    loki_log.info("log_start: " + consumer + " " + flow + " " + brand + " " + node + " " + time)
    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f%Z")
 
+   f_delta = ptime.time() - start_time
+   h_internal_duration.labels(service=LOG_START_SERVICE).observe(f_delta)
    return jsonify({'result': 'ok',
                        'timestamp': timestamp})
 
@@ -109,6 +135,12 @@ def register_start():
 def register_end():
    global c_end_total
    global h_interaction_duration
+   global c_internal_success
+   global c_internal_error
+   global h_internal_duration
+   global LOG_END_SERVICE
+
+   start_time = ptime.time()
 
    record = json.loads(request.data)
    log.debug("DATA IN: " + str(record))
@@ -118,6 +150,7 @@ def register_end():
       log.debug("consumer: " + consumer)
    except KeyError:
       log.error("Missing 'consumer' field")
+      c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'consumer\' field'})
 
@@ -126,6 +159,7 @@ def register_end():
       log.debug("flow: " + flow)
    except KeyError:
       log.error("Missing 'flow' field")
+      c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'flow\' field'})
 
@@ -134,6 +168,7 @@ def register_end():
       log.debug("brand: " + brand)
    except KeyError:
       log.error("Missing 'brand' field")
+      c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'brand\' field'})
 
@@ -142,6 +177,7 @@ def register_end():
       log.debug("node: " + node)
    except KeyError:
       log.error("Missing 'node' field")
+      c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'node\' field'})
 
@@ -150,6 +186,7 @@ def register_end():
       log.debug("close-status: " + close_status)
    except KeyError:
       log.error("Missing 'close-status' field")
+      c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'close-status\' field'})
    try:
@@ -159,6 +196,7 @@ def register_end():
       derived_to = ""
       if close_status == CLOSE_DERIVED:
          log.error("Missing 'derived-to' field. Mandatory when close-status==" + CLOSE_DERIVED)
+         c_internal_error.labels(service=LOG_END_SERVICE).inc()
          return jsonify({'result': 'error',
                      'description': 'Missing \'derived-to\' field'})
 
@@ -168,10 +206,12 @@ def register_end():
       log.debug("interaction-duration: " + interaction_duration)
    except KeyError:
       log.error("Missing 'interaction-duration' field")
+      c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'interaction-duration\' field'})
    except ValueError:
       log.error("Bad Type for 'interaction-duration' field. Should be a float number in seconds")
+      c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Bad Type for \'interaction-duration\' field. Should be a float number in seconds'})
 
@@ -180,17 +220,21 @@ def register_end():
       log.debug("time: " + time)
    except KeyError:
       log.error("Missing 'time' field")
+      c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'time\' field'})
 
    # Process prometheus metrics
    c_end_total.labels(consumer=consumer,flow=flow,brand=brand,node=node,close_status=close_status,derived_to=derived_to).inc()
    h_interaction_duration.labels(consumer=consumer,flow=flow,brand=brand,node=node,close_status=close_status,derived_to=derived_to).observe(f_interaction_duration)
+   c_internal_success.labels(service=LOG_END_SERVICE).inc()
 
    # Generate log line that will be parsed by Loki
    loki_log.info("log_end: " + consumer + " " + flow + " " + brand + " " + node + " " + close_status + " " + time)
    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f%Z")
 
+   f_delta = ptime.time() - start_time
+   h_internal_duration.labels(service=LOG_END_SERVICE).observe(f_delta)
    return jsonify({'result': 'ok',
                        'timestamp': timestamp})
 
@@ -264,6 +308,12 @@ def register_end():
 def register_service_call():
    global c_service_call_total
    global h_service_call_duration
+   global c_internal_success
+   global c_internal_error
+   global h_internal_duration
+   global LOG_SERVICE_CALL_SERVICE
+
+   start_time = ptime.time()
 
    record = json.loads(request.data)
    log.debug("DATA IN: " + str(record))
@@ -273,6 +323,7 @@ def register_service_call():
       log.debug("consumer: " + consumer)
    except KeyError:
       log.error("Missing 'consumer' field")
+      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'consumer\' field'})
 
@@ -281,6 +332,7 @@ def register_service_call():
       log.debug("flow: " + flow)
    except KeyError:
       log.error("Missing 'flow' field")
+      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'flow\' field'})
 
@@ -289,6 +341,7 @@ def register_service_call():
       log.debug("brand: " + brand)
    except KeyError:
       log.error("Missing 'brand' field")
+      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'brand\' field'})
 
@@ -297,6 +350,7 @@ def register_service_call():
       log.debug("node: " + node)
    except KeyError:
       log.error("Missing 'node' field")
+      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'node\' field'})
 
@@ -305,6 +359,7 @@ def register_service_call():
       log.debug("service: " + service)
    except KeyError:
       log.error("Missing 'service' field")
+      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'service\' field'})
 
@@ -313,6 +368,7 @@ def register_service_call():
       log.debug("result-code: " + result_code)
    except KeyError:
       log.error("Missing 'result-code' field")
+      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'result-code\' field'})
 
@@ -322,10 +378,12 @@ def register_service_call():
       log.debug("duration: " + duration)
    except KeyError:
       log.error("Missing 'duration' field")
+      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'duration\' field'})
    except ValueError:
       log.error("Bad Type for 'duration' field. Should be a float number in seconds")
+      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Bad Type for \'duration\' field. Should be a float number in seconds'})
 
@@ -334,6 +392,7 @@ def register_service_call():
       log.debug("timeout: " + timeout)
    except KeyError:
       log.error("Missing 'timeout' field")
+      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'timeout\' field'})
 
@@ -342,18 +401,22 @@ def register_service_call():
       log.debug("time: " + time)
    except KeyError:
       log.error("Missing 'time' field")
+      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'time\' field'})
 
    # Process prometheus metrics
    c_service_call_total.labels(consumer=consumer,flow=flow,brand=brand,node=node,service=service,result_code=result_code,timeout=timeout).inc()
    h_service_call_duration.labels(consumer=consumer,flow=flow,brand=brand,node=node,service=service,result_code=result_code,timeout=timeout).observe(f_duration)
+   c_internal_success.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
 
    # Generate log line that will be parsed by Loki
    loki_log.info("log_service_call: " + consumer + " " + flow + " " + brand + " " + node + " " + service + " " + result_code 
       + " " + duration + " " + timeout + " " + time)
    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f%Z")
-
+   
+   f_delta = ptime.time() - start_time
+   h_internal_duration.labels(service=LOG_SERVICE_CALL_SERVICE).observe(f_delta)
    return jsonify({'result': 'ok',
                        'timestamp': timestamp})
 if __name__ == '__main__':
