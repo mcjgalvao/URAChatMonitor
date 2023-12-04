@@ -1,0 +1,10 @@
+apiversion: v1
+kind: Pod
+metadata:
+  name: urachatmonitor-pod
+spec:
+  containers:
+  - name: urachatmonitor-container
+    image: mcjgalvao/urachatmonitor-server:latest
+    ports:
+    - containerPort: 8001

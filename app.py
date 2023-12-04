@@ -12,12 +12,12 @@ from prometheus_client import make_wsgi_app, Counter, Histogram
 root = log.getLogger()
 root.setLevel(log.DEBUG)
 #log.basicConfig(format='%(asctime)s.%(msecs)03d|%(levelname)s|%(message)s', datefmt='%Y%m%d %H%M%S')
-log.basicConfig(filename='test_log.txt', encoding='utf-8', level=log.DEBUG)
+log.basicConfig(filename='./log/test_log.txt', encoding='utf-8', level=log.DEBUG)
 root.addHandler(log.StreamHandler(sys.stdout))
 
 # Create log file that will be sent to Loki for monitoring
 formatter = log.Formatter('%(asctime)s %(levelname)s %(message)s')
-handler = log.FileHandler('monitor_log.txt')
+handler = log.FileHandler('./log/monitor_log.txt')
 handler.setFormatter(formatter)
 loki_log = log.getLogger("monitor_log")
 loki_log.setLevel(log.INFO)
