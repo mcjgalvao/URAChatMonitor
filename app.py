@@ -8,9 +8,18 @@ import time as ptime
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from prometheus_client import make_wsgi_app, Counter, Histogram
 
+PRODUCTION = True
+arg_list = sys.argv[1:]
+for arg in arg_list:
+   if arg == "--dev":
+      PRODUCTION = False
+   elif arg == "--help":
+      print("Usage: python app.py [--dev]")
+      sys.exit()
+
 # Configure root logging engine 
 root = log.getLogger()
-root.setLevel(log.DEBUG)
+root.setLevel(log.WARN if PRODUCTION else log.DEBUG)
 #log.basicConfig(format='%(asctime)s.%(msecs)03d|%(levelname)s|%(message)s', datefmt='%Y%m%d %H%M%S')
 log.basicConfig(filename='./log/test_log.txt', encoding='utf-8', level=log.DEBUG)
 root.addHandler(log.StreamHandler(sys.stdout))
@@ -419,7 +428,16 @@ def register_service_call():
    h_internal_duration.labels(service=LOG_SERVICE_CALL_SERVICE).observe(f_delta)
    return jsonify({'result': 'ok',
                        'timestamp': timestamp})
+
+# for waitress
+def create_app():
+   return app
+
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=8001)
+    if PRODUCTION:
+      from waitress import serve
+      serve(app, host="0.0.0.0", port=8001)
+    else:
+      app.run(debug=True, host="0.0.0.0", port=8001)
 
 
