@@ -55,4 +55,5 @@ EXPOSE 8001
 #EXPOSE 9090
 
 # Run the application.
-CMD python -m flask run --host=0.0.0.0 --port=8001 --debug
+#CMD python -m flask run --host=0.0.0.0 --port=8001 --debug
+CMD waitress-serve --host 0.0.0.0 --port 8001 --call app:create_app

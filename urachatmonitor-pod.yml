@@ -15,7 +15,7 @@ spec:
       spec:
          containers:
             - name: urachatmonitor-container
-              image: mcjgalvao/urachatmonitor-server:latest
+              image: mcjgalvao/urachatmonitor-server:v1.0
               imagePullPolicy: Never
 
 ---
