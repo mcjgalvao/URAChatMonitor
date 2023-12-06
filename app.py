@@ -8,7 +8,7 @@ import time as ptime
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from prometheus_client import make_wsgi_app, Counter, Histogram
 
-PRODUCTION = True
+PRODUCTION = False
 arg_list = sys.argv[1:]
 for arg in arg_list:
    if arg == "--dev":
@@ -20,17 +20,17 @@ for arg in arg_list:
 # Configure root logging engine 
 root = log.getLogger()
 root.setLevel(log.WARN if PRODUCTION else log.DEBUG)
-#log.basicConfig(format='%(asctime)s.%(msecs)03d|%(levelname)s|%(message)s', datefmt='%Y%m%d %H%M%S')
-log.basicConfig(filename='./log/test_log.txt', encoding='utf-8', level=log.DEBUG)
+log.basicConfig(format='%(asctime)s.%(msecs)03d|%(levelname)s|%(message)s', datefmt='%Y%m%d %H%M%S')
+#log.basicConfig(filename='./log/test_log.txt', encoding='utf-8', level=log.DEBUG)
 root.addHandler(log.StreamHandler(sys.stdout))
 
 # Create log file that will be sent to Loki for monitoring
-formatter = log.Formatter('%(asctime)s %(levelname)s %(message)s')
-handler = log.FileHandler('./log/monitor_log.txt')
-handler.setFormatter(formatter)
-loki_log = log.getLogger("monitor_log")
-loki_log.setLevel(log.INFO)
-loki_log.addHandler(handler)
+#formatter = log.Formatter('%(asctime)s %(levelname)s %(message)s')
+#handler = log.FileHandler('./log/monitor_log.txt')
+#handler.setFormatter(formatter)
+#loki_log = log.getLogger("monitor_log")
+#loki_log.setLevel(log.INFO)
+#loki_log.addHandler(handler)
 
 # Create de App
 app = Flask(__name__)
@@ -76,15 +76,16 @@ def register_start():
    global c_internal_error
    global h_internal_duration
    global LOG_START_SERVICE
+   global root
 
    start_time = ptime.time()
 
    record = json.loads(request.data)
-   log.debug("DATA IN: " + str(record))
+   root.debug("/log_start: " + str(record))
 
    try:
       consumer = record['consumer']
-      log.debug("consumer: " + consumer)
+      #log.debug("consumer: " + consumer)
    except KeyError:
       log.error("Missing 'consumer' field")
       c_internal_error.labels(service=LOG_START_SERVICE).inc()
@@ -93,7 +94,7 @@ def register_start():
 
    try:
       flow = record['flow']
-      log.debug("flow: " + flow)
+      #log.debug("flow: " + flow)
    except KeyError:
       log.error("Missing 'flow' field")
       c_internal_error.labels(service=LOG_START_SERVICE).inc()
@@ -102,7 +103,7 @@ def register_start():
 
    try:
       brand = record['brand']
-      log.debug("brand: " + brand)
+      #log.debug("brand: " + brand)
    except KeyError:
       log.error("Missing 'brand' field")
       c_internal_error.labels(service=LOG_START_SERVICE).inc()
@@ -111,7 +112,7 @@ def register_start():
 
    try:
       node = record['node']
-      log.debug("node: " + node)
+      #log.debug("node: " + node)
    except KeyError:
       log.error("Missing 'node' field")
       c_internal_error.labels(service=LOG_START_SERVICE).inc()
@@ -120,7 +121,7 @@ def register_start():
 
    try:
       time = record['time']
-      log.debug("time: " + time)
+      #log.debug("time: " + time)
    except KeyError:
       log.error("Missing 'time' field")
       c_internal_error.labels(service=LOG_START_SERVICE).inc()
@@ -132,7 +133,7 @@ def register_start():
    c_internal_success.labels(service=LOG_START_SERVICE).inc()
 
    # Generate log line that will be parsed by Loki
-   loki_log.info("log_start: " + consumer + " " + flow + " " + brand + " " + node + " " + time)
+   #loki_log.info("log_start: " + consumer + " " + flow + " " + brand + " " + node + " " + time)
    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f%Z")
 
    f_delta = ptime.time() - start_time
@@ -434,10 +435,10 @@ def create_app():
    return app
 
 if __name__ == '__main__':
-    if PRODUCTION:
+   if PRODUCTION:
       from waitress import serve
       serve(app, host="0.0.0.0", port=8001)
-    else:
+   else:
       app.run(debug=True, host="0.0.0.0", port=8001)
 
 
