@@ -2,3 +2,4 @@
 __pycache__
 monitor_log.txt
 test_log.txt
+nohup.out
