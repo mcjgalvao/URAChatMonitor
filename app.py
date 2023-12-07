@@ -88,7 +88,7 @@ def register_start():
       consumer = record['consumer']
       #app.logger.debug("consumer: " + consumer)
    except KeyError:
-      app.logger.error("Missing 'consumer' field")
+      app.logger.error("/log_start: " + str(record) + " -> Missing 'consumer' field")
       c_internal_error.labels(service=LOG_START_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'consumer\' field'})
@@ -97,7 +97,7 @@ def register_start():
       flow = record['flow']
       #app.logger.debug("flow: " + flow)
    except KeyError:
-      app.logger.error("Missing 'flow' field")
+      app.logger.error("/log_start: " + str(record) + " -> Missing 'flow' field")
       c_internal_error.labels(service=LOG_START_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'flow\' field'})
@@ -106,7 +106,7 @@ def register_start():
       brand = record['brand']
       #app.logger.debug("brand: " + brand)
    except KeyError:
-      app.logger.error("Missing 'brand' field")
+      app.logger.error("/log_start: " + str(record) + " -> Missing 'brand' field")
       c_internal_error.labels(service=LOG_START_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'brand\' field'})
@@ -115,7 +115,7 @@ def register_start():
       node = record['node']
       #app.logger.debug("node: " + node)
    except KeyError:
-      app.logger.error("Missing 'node' field")
+      app.logger.error("/log_start: " + str(record) + " -> Missing 'node' field")
       c_internal_error.labels(service=LOG_START_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'node\' field'})
@@ -124,7 +124,7 @@ def register_start():
       time = record['time']
       #log.debug("time: " + time)
    except KeyError:
-      app.logger.error("Missing 'time' field")
+      app.logger.error("/log_start: " + str(record) + " -> Missing 'time' field")
       c_internal_error.labels(service=LOG_START_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'time\' field'})
@@ -160,7 +160,7 @@ def register_end():
       consumer = record['consumer']
       #app.logger.debug("consumer: " + consumer)
    except KeyError:
-      app.logger.error("Missing 'consumer' field")
+      app.logger.error("/log_end: " + str(record) + " -> Missing 'consumer' field")
       c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'consumer\' field'})
@@ -169,7 +169,7 @@ def register_end():
       flow = record['flow']
       #app.logger.debug("flow: " + flow)
    except KeyError:
-      app.logger.error("Missing 'flow' field")
+      app.logger.error("/log_end: " + str(record) + " -> Missing 'flow' field")
       c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'flow\' field'})
@@ -178,7 +178,7 @@ def register_end():
       brand = record['brand']
       #app.logger.debug("brand: " + brand)
    except KeyError:
-      app.logger.error("Missing 'brand' field")
+      app.logger.error("/log_end: " + str(record) + " -> Missing 'brand' field")
       c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'brand\' field'})
@@ -187,7 +187,7 @@ def register_end():
       node = record['node']
       #app.logger.debug("node: " + node)
    except KeyError:
-      app.logger.error("Missing 'node' field")
+      app.logger.error("/log_end: " + str(record) + " -> Missing 'node' field")
       c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'node\' field'})
@@ -196,7 +196,7 @@ def register_end():
       close_status = record['close-status']
       #app.logger.debug("close-status: " + close_status)
    except KeyError:
-      app.logger.error("Missing 'close-status' field")
+      app.logger.error("/log_end: " + str(record) + " -> Missing 'close-status' field")
       c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'close-status\' field'})
@@ -206,7 +206,7 @@ def register_end():
    except KeyError:
       derived_to = ""
       if close_status == CLOSE_DERIVED:
-         app.logger.error("Missing 'derived-to' field. Mandatory when close-status==" + CLOSE_DERIVED)
+         app.logger.error("/log_end: " + str(record) + " -> Missing 'derived-to' field. Mandatory when close-status==" + CLOSE_DERIVED)
          c_internal_error.labels(service=LOG_END_SERVICE).inc()
          return jsonify({'result': 'error',
                      'description': 'Missing \'derived-to\' field'})
@@ -216,12 +216,12 @@ def register_end():
       f_interaction_duration = float(interaction_duration)
       #app.logger.debug("interaction-duration: " + interaction_duration)
    except KeyError:
-      app.logger.error("Missing 'interaction-duration' field")
+      app.logger.error("/log_end: " + str(record) + " -> Missing 'interaction-duration' field")
       c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'interaction-duration\' field'})
    except ValueError:
-      app.logger.error("Bad Type for 'interaction-duration' field. Should be a float number in seconds")
+      app.logger.error("/log_end: " + str(record) + " -> Bad Type for 'interaction-duration' field. Should be a float number in seconds")
       c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Bad Type for \'interaction-duration\' field. Should be a float number in seconds'})
@@ -230,7 +230,7 @@ def register_end():
       time = record['time']
       #app.logger.debug("time: " + time)
    except KeyError:
-      app.logger.error("Missing 'time' field")
+      app.logger.error("/log_end: " + str(record) + " -> Missing 'time' field")
       c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'time\' field'})
@@ -248,72 +248,6 @@ def register_end():
    h_internal_duration.labels(service=LOG_END_SERVICE).observe(f_delta)
    return jsonify({'result': 'ok',
                        'timestamp': timestamp})
-
-
-# @app.route('/log_derivation', methods=['POST','GET','PUT'])
-# def register_derivation():
-#    global c_derivation_total
-
-#    record = json.loads(request.data)
-#    log.debug("DATA IN: " + str(record))
-
-#    try:
-#       consumer = record['consumer']
-#       log.debug("consumer: " + consumer)
-#    except KeyError:
-#       log.error("Missing 'consumer' field")
-#       return jsonify({'result': 'error',
-#                        'description': 'Missing \'consumer\' field'})
-
-#    try:
-#       flow = record['flow']
-#       log.debug("flow: " + flow)
-#    except KeyError:
-#       log.error("Missing 'flow' field")
-#       return jsonify({'result': 'error',
-#                        'description': 'Missing \'flow\' field'})
-
-#    try:
-#       brand = record['brand']
-#       log.debug("brand: " + brand)
-#    except KeyError:
-#       log.error("Missing 'brand' field")
-#       return jsonify({'result': 'error',
-#                        'description': 'Missing \'brand\' field'})
-
-#    try:
-#       node = record['node']
-#       log.debug("node: " + node)
-#    except KeyError:
-#       log.error("Missing 'node' field")
-#       return jsonify({'result': 'error',
-#                        'description': 'Missing \'node\' field'})
-
-#    try:
-#       derived_to = record['derived-to']
-#       log.debug("derived-to: " + derived_to)
-#    except KeyError:
-#       log.error("Missing 'derived-to' field")
-#       return jsonify({'result': 'error',
-#                        'description': 'Missing \'derived-to\' field'})
-
-#    try:
-#       time = record['time']
-#       log.debug("time: " + time)
-#    except KeyError:
-#       log.error("Missing 'time' field")
-#       return jsonify({'result': 'error',
-#                        'description': 'Missing \'time\' field'})
-
-#    # Process prometheus metrics
-#    c_derivation_total.labels(consumer=consumer,flow=flow,brand=brand,node=node,derived_to=derived_to).inc()
-
-#    # Generate log line that will be parsed by Loki
-#    loki_log.info("log_derivation: " + consumer + " " + flow + " " + brand + " " + node + " " + derived_to + " " + time)
-#    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f%Z")
-
-#    return jsonify({'result': 'ok',
-#                        'timestamp': timestamp})
 
 @app.route('/log_service_call', methods=['POST','GET','PUT'])
 def register_service_call():
@@ -333,7 +267,7 @@ def register_service_call():
       consumer = record['consumer']
       #app.logger.debug("consumer: " + consumer)
    except KeyError:
-      app.logger.error("Missing 'consumer' field")
+      app.logger.error("/log_service_call: " + str(record) + " -> Missing 'consumer' field")
       c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'consumer\' field'})
@@ -342,7 +276,7 @@ def register_service_call():
       flow = record['flow']
       #app.logger.debug("flow: " + flow)
    except KeyError:
-      app.logger.error("Missing 'flow' field")
+      app.logger.error("/log_service_call: " + str(record) + " -> Missing 'flow' field")
       c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'flow\' field'})
@@ -351,7 +285,7 @@ def register_service_call():
       brand = record['brand']
       #app.logger.debug("brand: " + brand)
    except KeyError:
-      app.logger.error("Missing 'brand' field")
+      app.logger.error("/log_service_call: " + str(record) + " -> Missing 'brand' field")
       c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'brand\' field'})
@@ -360,7 +294,7 @@ def register_service_call():
       node = record['node']
       #app.logger.debug("node: " + node)
    except KeyError:
-      app.logger.error("Missing 'node' field")
+      app.logger.error("/log_service_call: " + str(record) + " -> Missing 'node' field")
       c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'node\' field'})
@@ -369,7 +303,7 @@ def register_service_call():
       service = record['service']
       #app.logger.debug("service: " + service)
    except KeyError:
-      app.logger.error("Missing 'service' field")
+      app.logger.error("/log_service_call: " + str(record) + " -> Missing 'service' field")
       c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'service\' field'})
@@ -378,7 +312,7 @@ def register_service_call():
       result_code = record['result-code']
       #app.logger.debug("result-code: " + result_code)
    except KeyError:
-      app.logger.error("Missing 'result-code' field")
+      app.logger.error("/log_service_call: " + str(record) + " -> Missing 'result-code' field")
       c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'result-code\' field'})
@@ -388,12 +322,12 @@ def register_service_call():
       f_duration = float(duration)
       #app.logger.debug("duration: " + duration)
    except KeyError:
-      app.logger.error("Missing 'duration' field")
+      app.logger.error("/log_service_call: " + str(record) + " -> Missing 'duration' field")
       c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'duration\' field'})
    except ValueError:
-      app.logger.error("Bad Type for 'duration' field. Should be a float number in seconds")
+      app.logger.error("/log_service_call: " + str(record) + " -> Bad Type for 'duration' field. Should be a float number in seconds")
       c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Bad Type for \'duration\' field. Should be a float number in seconds'})
@@ -402,7 +336,7 @@ def register_service_call():
       timeout = record['timeout']
       #app.logger.debug("timeout: " + timeout)
    except KeyError:
-      app.logger.error("Missing 'timeout' field")
+      app.logger.error("/log_service_call: " + str(record) + " -> Missing 'timeout' field")
       c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'timeout\' field'})
@@ -411,7 +345,7 @@ def register_service_call():
       time = record['time']
       #app.logger.debug("time: " + time)
    except KeyError:
-      app.logger.error("Missing 'time' field")
+      app.logger.error("/log_service_call: " + str(record) + " -> Missing 'time' field")
       c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'time\' field'})
