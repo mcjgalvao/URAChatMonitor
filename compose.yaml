@@ -11,7 +11,7 @@ services:
   monitor-server:
     build:
       context: .
-    image: mcjgalvao/urachatmonitor-server:v1.0  
+    image: mcjgalvao/urachatmonitor-server:v1.1  
     ports:
       - 8001:8001
 

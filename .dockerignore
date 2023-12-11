@@ -33,3 +33,9 @@
 LICENSE
 README.md
 **/*_log.txt
+monitor-env/
+sample-requests/
+diagrams/
+README.txt
+urachatmonitor-pod.yml
+
