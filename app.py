@@ -212,19 +212,38 @@ def register_end():
                      'description': 'Missing \'derived-to\' field'})
 
    try:
-      interaction_duration = record['interaction-duration']
-      f_interaction_duration = float(interaction_duration)
-      #app.logger.debug("interaction-duration: " + interaction_duration)
+      s_interaction_start_time = record['interaction-start-time']
+      t_interaction_start_time = datetime.datetime.strptime(s_interaction_start_time,"%Y-%m-%d %H:%M:%S")
    except KeyError:
-      app.logger.error("/log_end: " + str(record) + " -> Missing 'interaction-duration' field")
+      app.logger.error("/log_end: " + str(record) + " -> Missing 'interaction-start-time' field")
       c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
-                       'description': 'Missing \'interaction-duration\' field'})
+                       'description': 'Missing \'interaction-start-time\' field'})
    except ValueError:
-      app.logger.error("/log_end: " + str(record) + " -> Bad Type for 'interaction-duration' field. Should be a float number in seconds")
+      app.logger.error("/log_end: " + str(record) + " -> Bad String for 'interaction-start-time' field. Should be a 'YYYY-MM-DD hh:mm:ss'")
       c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
-                       'description': 'Bad Type for \'interaction-duration\' field. Should be a float number in seconds'})
+                       'description': 'Bad String for \'interaction-start-time\' field. Should be a \'YYYY-MM-DD hh:mm:ss\''})
+
+   try:
+      s_interaction_end_time = record['interaction-end-time']
+      t_interaction_end_time = datetime.datetime.strptime(s_interaction_end_time,"%Y-%m-%d %H:%M:%S")
+   except KeyError:
+      app.logger.error("/log_end: " + str(record) + " -> Missing 'interaction-end-time' field")
+      c_internal_error.labels(service=LOG_END_SERVICE).inc()
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'interaction-end-time\' field'})
+   except ValueError:
+      app.logger.error("/log_end: " + str(record) + " -> Bad String for 'interaction-end-time' field. Should be a 'YYYY-MM-DD hh:mm:ss'")
+      c_internal_error.labels(service=LOG_END_SERVICE).inc()
+      return jsonify({'result': 'error',
+                       'description': 'Bad String for \'interaction-end-time\' field. Should be a \'YYYY-MM-DD hh:mm:ss\''})
+
+   #app.logger.debug("interaction-start-time: " + s_interaction_start_time)
+   #app.logger.debug("interaction-end-time: " + s_interaction_end_time)
+   t_interaction_duration = t_interaction_end_time - t_interaction_start_time
+   f_interaction_duration = t_interaction_duration.total_seconds()
+   #app.logger.debug("f_interaction_duration: " + str(f_interaction_duration))
 
    try:
       time = record['time']
@@ -318,19 +337,38 @@ def register_service_call():
                        'description': 'Missing \'result-code\' field'})
 
    try:
-      duration = record['duration']
-      f_duration = float(duration)
-      #app.logger.debug("duration: " + duration)
+      s_service_call_start_time = record['service-call-start-time']
+      t_service_call_start_time = datetime.datetime.strptime(s_service_call_start_time,"%Y-%m-%d %H:%M:%S")
    except KeyError:
-      app.logger.error("/log_service_call: " + str(record) + " -> Missing 'duration' field")
-      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
+      app.logger.error("/log_service_call: " + str(record) + " -> Missing 'service-call-start-time' field")
+      c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
-                       'description': 'Missing \'duration\' field'})
+                       'description': 'Missing \'service-call-start-time\' field'})
    except ValueError:
-      app.logger.error("/log_service_call: " + str(record) + " -> Bad Type for 'duration' field. Should be a float number in seconds")
-      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
+      app.logger.error("/log_service_call: " + str(record) + " -> Bad String for 'service-call-start-time' field. Should be a 'YYYY-MM-DD hh:mm:ss'")
+      c_internal_error.labels(service=LOG_END_SERVICE).inc()
       return jsonify({'result': 'error',
-                       'description': 'Bad Type for \'duration\' field. Should be a float number in seconds'})
+                       'description': 'Bad String for \'service-call-start-time\' field. Should be a \'YYYY-MM-DD hh:mm:ss\''})
+
+   try:
+      s_service_call_end_time = record['service-call-end-time']
+      t_service_call_end_time = datetime.datetime.strptime(s_service_call_end_time,"%Y-%m-%d %H:%M:%S")
+   except KeyError:
+      app.logger.error("/log_service_call: " + str(record) + " -> Missing 'service-call-end-time' field")
+      c_internal_error.labels(service=LOG_END_SERVICE).inc()
+      return jsonify({'result': 'error',
+                       'description': 'Missing \'service-call-end-time\' field'})
+   except ValueError:
+      app.logger.error("/log_service_call: " + str(record) + " -> Bad String for 'service-call-end-time' field. Should be a 'YYYY-MM-DD hh:mm:ss'")
+      c_internal_error.labels(service=LOG_END_SERVICE).inc()
+      return jsonify({'result': 'error',
+                       'description': 'Bad String for \'service-call-end-time\' field. Should be a \'YYYY-MM-DD hh:mm:ss\''})
+
+   #app.logger.debug("service-call-start-time: " + s_service_call_start_time)
+   #app.logger.debug("service-call-end-time: " + s_service_call_end_time)
+   t_duration = t_service_call_end_time - t_service_call_start_time
+   f_duration = t_duration.total_seconds()
+   #app.logger.debug("f_duration: " + str(f_duration))
 
    try:
       timeout = record['timeout']
