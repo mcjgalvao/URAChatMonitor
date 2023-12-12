@@ -341,12 +341,12 @@ def register_service_call():
       t_service_call_start_time = datetime.datetime.strptime(s_service_call_start_time,"%Y-%m-%d %H:%M:%S")
    except KeyError:
       app.logger.error("/log_service_call: " + str(record) + " -> Missing 'service-call-start-time' field")
-      c_internal_error.labels(service=LOG_END_SERVICE).inc()
+      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'service-call-start-time\' field'})
    except ValueError:
       app.logger.error("/log_service_call: " + str(record) + " -> Bad String for 'service-call-start-time' field. Should be a 'YYYY-MM-DD hh:mm:ss'")
-      c_internal_error.labels(service=LOG_END_SERVICE).inc()
+      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Bad String for \'service-call-start-time\' field. Should be a \'YYYY-MM-DD hh:mm:ss\''})
 
@@ -355,12 +355,12 @@ def register_service_call():
       t_service_call_end_time = datetime.datetime.strptime(s_service_call_end_time,"%Y-%m-%d %H:%M:%S")
    except KeyError:
       app.logger.error("/log_service_call: " + str(record) + " -> Missing 'service-call-end-time' field")
-      c_internal_error.labels(service=LOG_END_SERVICE).inc()
+      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Missing \'service-call-end-time\' field'})
    except ValueError:
       app.logger.error("/log_service_call: " + str(record) + " -> Bad String for 'service-call-end-time' field. Should be a 'YYYY-MM-DD hh:mm:ss'")
-      c_internal_error.labels(service=LOG_END_SERVICE).inc()
+      c_internal_error.labels(service=LOG_SERVICE_CALL_SERVICE).inc()
       return jsonify({'result': 'error',
                        'description': 'Bad String for \'service-call-end-time\' field. Should be a \'YYYY-MM-DD hh:mm:ss\''})
 
