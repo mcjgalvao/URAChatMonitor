@@ -32,6 +32,7 @@ log.basicConfig(format='%(asctime)s.%(msecs)03d|%(levelname)s|%(message)s', date
 #loki_log.setLevel(log.INFO)
 #loki_log.addHandler(handler)
 LOKI_SEP="|"
+_INF = float("inf")
 
 # Create de App
 app = Flask(__name__)
@@ -43,7 +44,7 @@ c_start_total = Counter('log_start_total', 'Total number of requests for the log
 c_end_total = Counter('log_end_total', 'Total number of requests for the log_end service'
                       , ['consumer','flow','brand','node',"close_status","derived_to"]) 
 h_interaction_duration = Histogram('log_interaction_duration', 'URA/ChatBot total interaction duration'
-                                   , ['consumer','flow','brand','node','close_status','derived_to'])
+                                   , ['consumer','flow','brand','node','close_status','derived_to'] , buckets=(60, 300, 600, 1200, 1800, 3600, 7200, _INF))
 # c_derivation_total = Counter('log_derivation_total', 'Total number of requests for the log_derivation service', ['consumer','flow','brand','node','derived_to'])
 
 c_service_call_total = Counter('log_service_call_total', 'Total number of requests for the log_service_call service'

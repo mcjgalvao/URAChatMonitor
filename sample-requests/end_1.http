@@ -8,7 +8,7 @@ content-type: application/json
     "node": "1.2.3.1.3",
     "close-status": "normal", 
     "interaction-start-time" : "2023-12-08 06:01:13",
-    "interaction-end-time" : "2023-12-08 06:02:13",
+    "interaction-end-time" : "2023-12-08 07:12:13",
     "time": "2023-12-08 06:02:13"
 }
 
