@@ -4,6 +4,9 @@ import logging as log
 import datetime
 import sys
 import time as ptime
+import os
+
+from logging.handlers import RotatingFileHandler
 
 from werkzeug.middleware.dispatcher import DispatcherMiddleware
 from prometheus_client import make_wsgi_app, Counter, Histogram
@@ -19,8 +22,15 @@ for arg in arg_list:
 
 # Configure root logging engine 
 root = log.getLogger()
-root.setLevel(log.DEBUG if PRODUCTION else log.DEBUG)
+root.setLevel(log.WARN if PRODUCTION else log.DEBUG)
 log.basicConfig(format='%(asctime)s.%(msecs)03d|%(levelname)s|%(message)s', datefmt='%Y%m%d %H%M%S')
+formatter = log.Formatter('%(asctime)s.%(msecs)03d|%(levelname)s|%(message)s')
+handler = RotatingFileHandler("./log/monitor_log.txt", maxBytes = 50*1024*1024, backupCount = 5)
+handler.setFormatter(formatter)
+root.addHandler(handler)
+
+#root.warning(str(os.environ))
+
 #log.basicConfig(filename='./log/test_log.txt', encoding='utf-8', level=log.DEBUG)
 #root.addHandler(log.StreamHandler(sys.stdout))
 
@@ -413,9 +423,11 @@ def register_service_call():
 
 # for waitress
 def create_app():
+   app.logger.warning("Application started!")
    return app
 
 if __name__ == '__main__':
+   app.logger.warning("Application started!")
    if PRODUCTION:
       from waitress import serve
       serve(app, host="0.0.0.0", port=8001)

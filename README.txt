@@ -14,5 +14,11 @@ KUBERNETES:
 
 1 - Enable kubernetes support in docker configuration
 
+LOGGING:
+
+./log/monitor_log.txt
+
+MAX LOG FILE SIZE: 50Mb
+5 Rotations. Will use up to 300Mb of disk space.
 
 
